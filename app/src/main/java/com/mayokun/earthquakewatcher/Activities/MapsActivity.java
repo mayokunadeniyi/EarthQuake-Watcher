@@ -31,6 +31,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.mayokun.earthquakewatcher.Model.EarthQuake;
 import com.mayokun.earthquakewatcher.R;
+import com.mayokun.earthquakewatcher.UI.CustomInfoWindow;
 import com.mayokun.earthquakewatcher.Util.Constants;
 
 import org.json.JSONArray;
@@ -39,7 +40,8 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener,
+        GoogleMap.OnMarkerClickListener {
 
     private GoogleMap mMap;
     private LocationManager locationManager;
@@ -74,6 +76,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setInfoWindowAdapter(new CustomInfoWindow(getApplicationContext()));
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         locationListener = new LocationListener() {
@@ -172,9 +175,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
                         markerOptions.title(earthQuake.getPlace());
                         markerOptions.position(new LatLng(lat,lon));
+                        markerOptions.snippet("Magnitude: "+ earthQuake.getMagnitude()
+                        +  "\n" + "Date: " + formattedDate);
 
                         Marker marker = mMap.addMarker(markerOptions);
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lon),1));
+                        marker.setTag(earthQuake.getDetailLink());
 
 
                     }
@@ -191,4 +197,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         requestQueue.add(jsonObjectRequest);
     }
 
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        return false;
+    }
 }
