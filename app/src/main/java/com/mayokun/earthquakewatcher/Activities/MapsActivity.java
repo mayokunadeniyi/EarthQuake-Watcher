@@ -13,20 +13,38 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.mayokun.earthquakewatcher.Model.EarthQuake;
 import com.mayokun.earthquakewatcher.R;
+import com.mayokun.earthquakewatcher.Util.Constants;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Date;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private LocationManager locationManager;
     private LocationListener locationListener;
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +54,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-    }
 
+        requestQueue = Volley.newRequestQueue(this);
+
+        //Get the EarthQuakes
+        getEarthQuakes();
+    }
 
     /**
      * Manipulates the map once available.
@@ -76,9 +98,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
-        if (Build.VERSION.SDK_INT < 23){
+        if (Build.VERSION.SDK_INT < 23) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        }else {
+        } else {
 
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
@@ -105,13 +127,73 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED){
+                    == PackageManager.PERMISSION_GRANTED) {
 
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
             }
         }
     }
+
+    private void getEarthQuakes() {
+
+        final EarthQuake earthQuake = new EarthQuake();
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, Constants.BASE_URL,
+                null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+                try {
+                    JSONArray feature = response.getJSONArray("features");
+                    for (int i = 0; i < Constants.LIMIT; i++) {
+
+                        //Get the properties
+                        JSONObject properties = feature.getJSONObject(i).getJSONObject("properties");
+
+                        //Get the geometry
+                        JSONObject geometry = feature.getJSONObject(i).getJSONObject("geometry");
+                        //Get the coordinates
+                        JSONArray coordinates = geometry.getJSONArray("coordinates");
+
+                        //Get the longitute and latitude of the coordinates
+                        double lon = coordinates.getDouble(0);
+                        double lat = coordinates.getDouble(1);
+
+                        earthQuake.setPlace(properties.getString("place"));
+                        earthQuake.setType(properties.getString("type"));
+                        earthQuake.setTime(properties.getLong("time"));
+                        earthQuake.setMagnitude(properties.getDouble("mag"));
+                        earthQuake.setDetailLink(properties.getString("detail"));
+
+                        //Get and format the date for the earthquake
+                        java.text.DateFormat dateFormat = java.text.DateFormat.getDateInstance();
+                        String formattedDate = dateFormat.format(new Date(Long.valueOf(properties.getLong("time"))).getTime());
+
+                        //Create Marker Options and populate to the Map
+                        MarkerOptions markerOptions = new MarkerOptions();
+                        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+                        markerOptions.title(earthQuake.getPlace());
+                        markerOptions.position(new LatLng(lat,lon));
+
+                        Marker marker = mMap.addMarker(markerOptions);
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lon),1));
+
+
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
+    }
+
 }
