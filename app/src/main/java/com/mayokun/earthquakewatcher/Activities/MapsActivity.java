@@ -2,6 +2,7 @@ package com.mayokun.earthquakewatcher.Activities;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -14,6 +15,10 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
+import android.webkit.WebView;
+import android.widget.Button;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -47,6 +52,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationManager locationManager;
     private LocationListener locationListener;
     private RequestQueue requestQueue;
+    private AlertDialog.Builder builder;
+    private AlertDialog alertDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +84,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setInfoWindowAdapter(new CustomInfoWindow(getApplicationContext()));
+        mMap.setOnInfoWindowClickListener(this);
+        mMap.setOnMarkerClickListener(this);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         locationListener = new LocationListener() {
@@ -174,12 +183,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         MarkerOptions markerOptions = new MarkerOptions();
                         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
                         markerOptions.title(earthQuake.getPlace());
-                        markerOptions.position(new LatLng(lat,lon));
-                        markerOptions.snippet("Magnitude: "+ earthQuake.getMagnitude()
-                        +  "\n" + "Date: " + formattedDate);
+                        markerOptions.position(new LatLng(lat, lon));
+                        markerOptions.snippet("Magnitude: " + earthQuake.getMagnitude()
+                                + "\n" + "Date: " + formattedDate);
 
                         Marker marker = mMap.addMarker(markerOptions);
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lon),1));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lon), 1));
                         marker.setTag(earthQuake.getDetailLink());
 
 
@@ -200,10 +209,95 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onInfoWindowClick(Marker marker) {
 
+        getEarthQuakeDetail(marker.getTag().toString());
+
+    }
+
+
+    private void getEarthQuakeDetail(String toString) {
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, toString, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        String detailUrl = "";
+
+                        try {
+                            JSONObject properties = response.getJSONObject("properties");
+                            JSONObject products = properties.getJSONObject("products");
+                            JSONArray geoserve = products.getJSONArray("geoserve");
+
+                            for (int i = 0; i < geoserve.length(); i++) {
+                                JSONObject geoserveObj = geoserve.getJSONObject(i);
+                                JSONObject contents = geoserveObj.getJSONObject("contents");
+                                JSONObject geoserveJson = contents.getJSONObject("geoserve.json");
+
+
+                                detailUrl = geoserveJson.getString("url");
+                            }
+                            getMoreDetails(detailUrl);
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
         return false;
+    }
+
+    public void getMoreDetails(String url) {
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        builder = new AlertDialog.Builder(MapsActivity.this);
+                        View view = getLayoutInflater().inflate(R.layout.layout_popup,null);
+
+                        //Set up layout popup widget
+
+                        Button dismissBtn = (Button) view.findViewById(R.id.dismissPop);
+                        Button dismissBtnTop = (Button) view.findViewById(R.id.dismissPopup);
+                        TextView popList = (TextView) view.findViewById(R.id.popList);
+                        WebView webView = (WebView) view.findViewById(R.id.webViewID);
+                        StringBuilder stringBuilder = new StringBuilder();
+
+                        try {
+                            JSONArray cities = response.getJSONArray("cities");
+                            for (int i = 0; i < cities.length(); i++) {
+
+                                JSONObject cityObj = cities.getJSONObject(i);
+
+                                stringBuilder.append("City: " + cityObj.getString("name") +
+                                        "\n" + "Distance: " + cityObj.getString("distance") +
+                                        "\n" + "Population: " + cityObj.get("population") );
+                                stringBuilder.append("\n\n");
+
+                            }
+
+                            popList.setText(stringBuilder);
+                            builder.setView(view);
+                            alertDialog = builder.create();
+                            alertDialog.show();
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
     }
 }
