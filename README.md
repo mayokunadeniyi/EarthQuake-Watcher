@@ -7,7 +7,7 @@
 EarthQuake Watcher is an Android application built using the [Google Maps API](https://developers.google.com/maps/documentation/) and fetches data from the [USGS API](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php). This USGS API which is in the [GeoJSON](https://geojson.org/) format allows for encoding variety of geographic data structures. EarthQuake Watcher leverages on this API to allow users keep track and monitor earthquake events occuring around the world. EarthhQuake Watcher presents data gotten from the USGS API on the Google Map for the user to interact with.
 
 ## Project Demo
-
+<p align="center"><img src="https://github.com/mayokunthefirst/EarthQuake-Watcher/blob/master/gif/20190602_165709.gif"></a></p> 
 
 ## Getting Started
 You will need to have a Google Map API from the [Google Developer Console](https://console.developers.google.com/google/maps-apis) to work with Google Maps. If you don’t already have an account, you will need to create one and also create a new project that uses the Map SDK for Android. After creating the project, create a new API key for that project. Use your API key as the value for _google_maps_key_ in the [google_maps_api.xml](https://github.com/mayokunthefirst/EarthQuake-Watcher/blob/master/app/src/release/res/values/google_maps_api.xml) file under the values directory. Add the Package Name and the SHA-1 certificate fingerprint to the project.
@@ -49,7 +49,7 @@ git clone https://github.com/username/EarthQuake-Watcher.git
 
 5. Once all build errors have been resolved, you should be all set to build the app and test it.
 
-6. Follow the instructions in the *Getting Started* Section of this project
+6. Follow the instructions in the *Getting Started* section of this project
 
 7. To Build the app, go to _Build>Make Project_ (or alternatively press the Make Project icon in the toolbar).
 
