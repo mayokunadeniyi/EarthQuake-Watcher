@@ -4,7 +4,9 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -30,7 +32,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -54,6 +58,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private RequestQueue requestQueue;
     private AlertDialog.Builder builder;
     private AlertDialog alertDialog;
+    private BitmapDescriptor[] iconColors;
+    private Button showListBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +71,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         requestQueue = Volley.newRequestQueue(this);
+        showListBtn = (Button) findViewById(R.id.showListBtn);
+
+        showListBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               startActivity(new Intent(MapsActivity.this,EarthQuakeList.class));
+            }
+        });
+
+        iconColors = new BitmapDescriptor[]{
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
+                //BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)
+        };
 
         //Get the EarthQuakes
         getEarthQuakes();
@@ -174,6 +201,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         earthQuake.setTime(properties.getLong("time"));
                         earthQuake.setMagnitude(properties.getDouble("mag"));
                         earthQuake.setDetailLink(properties.getString("detail"));
+                        earthQuake.setLatitude(lat);
+                        earthQuake.setLongitude(lon);
 
                         //Get and format the date for the earthquake
                         java.text.DateFormat dateFormat = java.text.DateFormat.getDateInstance();
@@ -181,16 +210,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                         //Create Marker Options and populate to the Map
                         MarkerOptions markerOptions = new MarkerOptions();
-                        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+                        markerOptions.icon(iconColors[Constants.randomInt(iconColors.length,0)]);
                         markerOptions.title(earthQuake.getPlace());
-                        markerOptions.position(new LatLng(lat, lon));
+                        markerOptions.position(new LatLng(earthQuake.getLatitude(), earthQuake.getLongitude()));
                         markerOptions.snippet("Magnitude: " + earthQuake.getMagnitude()
                                 + "\n" + "Date: " + formattedDate);
+
+                        //Earthquake with magnitude equal or greater than 2
+                        if (earthQuake.getMagnitude() >= 2.0){
+                            CircleOptions circleOptions = new CircleOptions();
+                            circleOptions.center(new LatLng(earthQuake.getLatitude(),earthQuake.getLongitude()));
+                            circleOptions.radius(30000);
+                            circleOptions.strokeWidth(3.6f);
+                            circleOptions.fillColor(Color.RED);
+                            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+
+                            mMap.addCircle(circleOptions);
+                        }
 
                         Marker marker = mMap.addMarker(markerOptions);
                         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lon), 1));
                         marker.setTag(earthQuake.getDetailLink());
-
 
                     }
                 } catch (JSONException e) {
@@ -260,7 +300,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onResponse(JSONObject response) {
                         builder = new AlertDialog.Builder(MapsActivity.this);
-                        View view = getLayoutInflater().inflate(R.layout.layout_popup,null);
+                        View view = getLayoutInflater().inflate(R.layout.layout_popup, null);
 
                         //Set up layout popup widget
 
@@ -271,6 +311,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         StringBuilder stringBuilder = new StringBuilder();
 
                         try {
+                            if (response.has("tectonicSummary") && response.getString("tectonicSummary") != null) {
+                                JSONObject tectonic = response.getJSONObject("tectonicSummary");
+
+                                if (tectonic.has("text") && tectonic.getString("text") != null) {
+
+                                    String text = tectonic.getString("text");
+                                    webView.loadDataWithBaseURL(null, text, "text/html", "UTF-8", null);
+                                }
+                            }
                             JSONArray cities = response.getJSONArray("cities");
                             for (int i = 0; i < cities.length(); i++) {
 
@@ -278,12 +327,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 stringBuilder.append("City: " + cityObj.getString("name") +
                                         "\n" + "Distance: " + cityObj.getString("distance") +
-                                        "\n" + "Population: " + cityObj.get("population") );
+                                        "\n" + "Population: " + cityObj.get("population"));
                                 stringBuilder.append("\n\n");
 
                             }
 
                             popList.setText(stringBuilder);
+                            dismissBtn.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    alertDialog.dismiss();
+                                }
+                            });
+                            dismissBtnTop.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    alertDialog.dismiss();
+                                }
+                            });
                             builder.setView(view);
                             alertDialog = builder.create();
                             alertDialog.show();
