@@ -1,4 +1,4 @@
-[![Pull Requests Welcome](https://img.shields.io/badge/PRs-welcome-red.svg?style=flat)](http://makeapullrequest.com)
+[![Pull Requests Welcome](https://img.shields.io/badge/PRs-welcome-red.svg?style=flat)](http://makeapullrequest.com) ![License](https://img.shields.io/github/license/mayokunthefirst/EarthQuake-Watcher.svg)
 
 # EarthQuake Watcher
 
@@ -65,19 +65,7 @@ Contributions are always welcome. Simply fork the project and make a Pull Reques
 * Mayokun Adeniyi   ![Twitter](https://img.shields.io/twitter/follow/mayokunadeniyi.svg?style=social)
 
 ## License
-Copyright 2019 Mayokun Adeniyi.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+Licensed under the MIT license.
 
 
 
