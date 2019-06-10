@@ -1,7 +1,4 @@
-[![Pull Requests Welcome](https://img.shields.io/badge/PRs-welcome-red.svg?style=flat)](http://makeapullrequest.com) ![License](https://img.shields.io/github/license/mayokunthefirst/EarthQuake-Watcher.svg)
-
-# EarthQuake Watcher
-
+## EarthQuake Watcher [![Pull Requests Welcome](https://img.shields.io/badge/PRs-welcome-red.svg?style=flat)](http://makeapullrequest.com) ![License](https://img.shields.io/github/license/mayokunthefirst/EarthQuake-Watcher.svg)
 
 ## Project Overview
 EarthQuake Watcher is an Android application built using the [Google Maps API](https://developers.google.com/maps/documentation/) and fetches data from the [USGS API](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php). This USGS API which is in the [GeoJSON](https://geojson.org/) format allows for encoding variety of geographic data structures. EarthQuake Watcher leverages on this API to allow users keep track and monitor earthquake events occuring around the world. EarthQuake Watcher presents data gotten from the USGS API on the Google Map for the user to interact with.
