@@ -7,7 +7,7 @@ EarthQuake Watcher is an Android application built using the [Google Maps API](h
 <p align="center"><img src="https://github.com/mayokunthefirst/EarthQuake-Watcher/blob/master/gif/20190602_165709.gif"></a></p> 
 
 ## Getting Started
-You will need to have a Google Map API from the [Google Developer Console](https://console.developers.google.com/google/maps-apis) to work with Google Maps. If you don’t already have an account, you will need to create one and also create a new project that uses the Map SDK for Android. After creating the project, create a new API key for that project. Use your API key as the value for _google_maps_key_ in the [google_maps_api.xml](https://github.com/mayokunthefirst/EarthQuake-Watcher/blob/master/app/src/release/res/values/google_maps_api.xml) file under the values directory. Add the Package Name and the SHA-1 certificate fingerprint to the project.
+You will need to have a Google Map API from the [Google Developer Console](https://console.developers.google.com/google/maps-apis) to work with Google Maps. If you don’t already have an account, you will need to create one and also create a new project that uses the Map SDK for Android. After creating the project, create a new API key for that project. Use your API key as the value for _google_maps_key_ in the [google_maps_api.xml](https://github.com/mayokunthefirst/EarthQuake-Watcher/blob/master/app/src/debug/res/values/google_maps_api.xml) file under the values directory. Add the Package Name and the SHA-1 certificate fingerprint to the project.
 
 <p align="center"><img src="https://user-images.githubusercontent.com/29807085/58762911-a2fcdc80-854c-11e9-8c90-006fa5ce9f93.png"></a></p> 
 
